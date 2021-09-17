@@ -9,6 +9,7 @@ import (
 
 	"github.com/neovim/go-client/nvim"
 	"github.com/neovim/go-client/nvim/plugin"
+	"github.com/tidwall/gjson"
 )
 
 var buf nvim.Buffer
@@ -17,6 +18,8 @@ var accessToken string
 var refreshToken string
 var selectedAddress Address
 var addresses []Address
+var home gjson.Result
+var selectedCardHomeID string
 
 func main() {
 	plugin.Main(func(p *plugin.Plugin) error {
@@ -35,20 +38,26 @@ func main() {
 				pickAddress(p)
 				return "", nil
 			})
-
+		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodPickHomeCard"},
+			func() (string, error) {
+				pickHomeCard(p)
+				return "", nil
+			})
 		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodLogin"},
 			func() (string, error) {
 				login(p)
 				return "", nil
 			})
-
 		p.HandleFunction(&plugin.FunctionOptions{Name: "ShowHome"},
 			func() (string, error) {
 				showHome(p)
+				mappings := map[string]string{
+					"<cr>": ":call IfoodPickHomeCard()<cr>",
+				}
+				setMappings(p, mappings)
 				return "", nil
 			})
-
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodListMerchant"},
+		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodMerchants"},
 			func() (string, error) {
 				listMerchants(p)
 				return "", nil
@@ -125,6 +134,26 @@ func setMappings(p *plugin.Plugin, mappings map[string]string) {
 	}
 }
 
+func pickHomeCard(p *plugin.Plugin) {
+	lineBytes, err := p.Nvim.CurrentLine()
+	if err != nil {
+		fmt.Println("err", err)
+	}
+
+	line := string(lineBytes)
+	err = p.Nvim.CloseWindow(win, true)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+	selectedCardHomeID = homeCardFromString(line)
+
+	var result string
+	err = p.Nvim.Call("IfoodShowMerchants()", &result, "")
+	if err != nil {
+		fmt.Println("err", err)
+	}
+}
+
 func pickAddress(p *plugin.Plugin) {
 	lineBytes, err := p.Nvim.CurrentLine()
 	if err != nil {
@@ -154,22 +183,20 @@ func listMerchants(p *plugin.Plugin) {
 	}
 
 	mappings := map[string]string{
-		"<cr>": ":call IfoodPickMerchant()<cr>",
+		"<cr>": ":call IfoodShowMerchantHome()<cr>",
 	}
 	createWindow(p, "any", content)
 	setMappings(p, mappings)
 }
 
 func showHome(p *plugin.Plugin) {
-	home := GetHome()
+	home = GetHome()
 
 	repl := [][]byte{
 		[]byte("Feeling hungry? What do you want to eat?"),
 		[]byte("----------------------------------"),
 	}
 
-	fmt.Println(home)
-	fmt.Println(home.Get("sections.0.cards.0.data.contents"))
 	for _, c := range home.Get("sections.0.cards.0.data.contents").Array() {
 		fmt.Println(c.Raw)
 		repl = append(repl, []byte(c.Get("title").String()))
@@ -260,4 +287,16 @@ func adressFromString(address string) Address {
 		}
 	}
 	return Address{}
+}
+
+func homeCardFromString(selectedCard string) string {
+	for _, c := range home.Get("sections.0.cards.0.data.contents").Array() {
+		fmt.Println(c.Raw)
+		title := c.Get("title").String()
+		if title == selectedCard {
+			fmt.Println(c.Raw)
+			return c.Get("id").String()
+		}
+	}
+	return ""
 }
