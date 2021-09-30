@@ -180,7 +180,6 @@ func RefreshToken() (string, string) {
 func ShowMerchants(listID string, latitude, longitude float64) gjson.Result {
 	baseURL := "https://marketplace.ifood.com.br/v1/page/%s?latitude=%f&longitude=%f&channel=IFOOD"
 	baseURL = fmt.Sprintf(baseURL, listID, latitude, longitude)
-	fmt.Println(baseURL)
 	payload := map[string][]string{
 		"supported-headers": {"OPERATION_HEADER"},
 		"supported-cards":   {"MERCHANT_LIST", "CATALOG_ITEM_LIST", "CATALOG_ITEM_LIST_V2", "FEATURED_MERCHANT_LIST", "CATALOG_ITEM_CAROUSEL", "BIG_BANNER_CAROUSEL", "IMAGE_BANNER", "MERCHANT_LIST_WITH_ITEMS_CAROUSEL", "SMALL_BANNER_CAROUSEL", "NEXT_CONTENT", "MERCHANT_CAROUSEL", "MERCHANT_TILE_CAROUSEL", "SIMPLE_MERCHANT_CAROUSEL", "INFO_CARD", "MERCHANT_LIST_V2", "ROUND_IMAGE_CAROUSEL", "BANNER_GRID"},

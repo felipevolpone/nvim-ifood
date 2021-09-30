@@ -26,50 +26,43 @@ var selectedCardHomeID string
 func main() {
 	plugin.Main(func(p *plugin.Plugin) error {
 
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodAddress"},
-			func() (string, error) {
-				listAddress(p)
-				mappings := map[string]string{
-					"<cr>": ":call IfoodPickAddress()<cr>",
-				}
-				setMappings(p, mappings)
-				return "", nil
-			})
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodPickAddress"},
-			func() (string, error) {
-				pickAddress(p)
-				return "", nil
-			})
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodLogin"},
+		p.HandleCommand(&plugin.CommandOptions{Name: "IfoodLogin"},
 			func() (string, error) {
 				login(p)
 				return "", nil
 			})
-		p.HandleFunction(&plugin.FunctionOptions{Name: "ShowHome"},
+
+		p.HandleCommand(&plugin.CommandOptions{Name: "IfoodAddress"},
 			func() (string, error) {
-				showHome(p)
+				listAddress(p)
 				mappings := map[string]string{
-					"<cr>": ":call IfoodPickHomeCard()<cr>",
+					"<cr>": ":IfoodPickAddress<cr>",
 				}
 				setMappings(p, mappings)
 				return "", nil
 			})
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodPickHomeCard"},
+		p.HandleCommand(&plugin.CommandOptions{Name: "IfoodPickAddress"},
+			func() (string, error) {
+				pickAddress(p)
+				return "", nil
+			})
+
+		p.HandleCommand(&plugin.CommandOptions{Name: "IfoodHome"},
+			func() (string, error) {
+				showHome(p)
+				mappings := map[string]string{
+					"<cr>": ":IfoodPickHomeCard<cr>",
+				}
+				setMappings(p, mappings)
+				return "", nil
+			})
+		p.HandleCommand(&plugin.CommandOptions{Name: "IfoodPickHomeCard"},
 			func() (string, error) {
 				pickHomeCard(p)
 				return "", nil
 			})
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodMerchants"},
-			func() (string, error) {
-				listMerchants(p)
-				mappings := map[string]string{
-					"<cr>": ":call IfoodShowMerchants()<cr>",
-				}
-				setMappings(p, mappings)
-				return "", nil
-			})
 
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodShowMerchants"},
+		p.HandleCommand(&plugin.CommandOptions{Name: "IfoodMerchants"},
 			func() (string, error) {
 				showMerchants(p)
 				return "", nil
@@ -159,11 +152,7 @@ func pickHomeCard(p *plugin.Plugin) {
 	}
 	selectedCardHomeID = homeCardFromString(line)
 
-	var result string
-	err = p.Nvim.Call("IfoodShowMerchants()", &result, "")
-	if err != nil {
-		fmt.Println("err", err)
-	}
+	p.Nvim.Command("IfoodMerchants")
 }
 
 func pickAddress(p *plugin.Plugin) {
@@ -179,11 +168,7 @@ func pickAddress(p *plugin.Plugin) {
 	}
 	selectedAddress = adressFromString(line)
 
-	var result string
-	err = p.Nvim.Call("ShowHome()", &result, "")
-	if err != nil {
-		fmt.Println("err", err)
-	}
+	p.Nvim.Command("IfoodHome")
 }
 
 func listMerchants(p *plugin.Plugin) {
@@ -218,15 +203,12 @@ func showHome(p *plugin.Plugin) {
 
 func login(p *plugin.Plugin) {
 	openCreds()
-	var result string
-	err := p.Nvim.Call("IfoodAddress()", &result, "")
-	if err != nil {
-		fmt.Println("err", err)
-	}
+	// var result string
+	p.Nvim.Command("IfoodAddress")
 	return
 
 	var email string
-	err = p.Nvim.Call("input", &email, "Lets login. Write your email: ")
+	err := p.Nvim.Call("input", &email, "Lets login. Write your email: ")
 	if err != nil {
 		fmt.Println("err", err)
 	}
@@ -255,10 +237,7 @@ func login(p *plugin.Plugin) {
 	accessToken, refreshToken = Auth(email, accessToken)
 	saveLocal()
 
-	err = p.Nvim.Call("IfoodAddress()", "", "")
-	if err != nil {
-		fmt.Println("err", err)
-	}
+	p.Nvim.Command("IfoodAddress")
 }
 
 func saveLocal() {
