@@ -125,12 +125,11 @@ func Auth(email, token string) (string, string) {
 func GetHome() gjson.Result {
 	uri := "https://marketplace.ifood.com.br/v2/home?alias=single_tab_cms&latitude=%s&longitude=%s&channel=IFOOD&size=100"
 	uri = fmt.Sprintf(uri, fmt.Sprint(selectedAddress.Coordinates.Latitude), fmt.Sprint(selectedAddress.Coordinates.Longitude))
-	fmt.Println(uri)
 
 	payload := map[string][]string{
-		"supported-headers": []string{"OPERATION_HEADER"},
-		"supported-cards":   []string{"SMALL_BANNER_CAROUSEL"},
-		"supported-actions": []string{"catalog-item", "merchant", "page", "card-content", "last-restaurants"},
+		"supported-headers": {"OPERATION_HEADER"},
+		"supported-cards":   {"SMALL_BANNER_CAROUSEL"},
+		"supported-actions": {"catalog-item", "merchant", "page", "card-content", "last-restaurants"},
 	}
 
 	body, _ := json.Marshal(payload)
@@ -176,4 +175,34 @@ func RefreshToken() (string, string) {
 	json.Unmarshal(content, &result)
 
 	return result["access_token"], result["refresh_token"]
+}
+
+func ShowMerchants(listID string, latitude, longitude float64) gjson.Result {
+	baseURL := "https://marketplace.ifood.com.br/v1/page/%s?latitude=%f&longitude=%f&channel=IFOOD"
+	baseURL = fmt.Sprintf(baseURL, listID, latitude, longitude)
+	fmt.Println(baseURL)
+	payload := map[string][]string{
+		"supported-headers": {"OPERATION_HEADER"},
+		"supported-cards":   {"MERCHANT_LIST", "CATALOG_ITEM_LIST", "CATALOG_ITEM_LIST_V2", "FEATURED_MERCHANT_LIST", "CATALOG_ITEM_CAROUSEL", "BIG_BANNER_CAROUSEL", "IMAGE_BANNER", "MERCHANT_LIST_WITH_ITEMS_CAROUSEL", "SMALL_BANNER_CAROUSEL", "NEXT_CONTENT", "MERCHANT_CAROUSEL", "MERCHANT_TILE_CAROUSEL", "SIMPLE_MERCHANT_CAROUSEL", "INFO_CARD", "MERCHANT_LIST_V2", "ROUND_IMAGE_CAROUSEL", "BANNER_GRID"},
+		"supported-actions": {"catalog-item", "merchant", "page", "card-content", "last-restaurants"},
+	}
+
+	body, _ := json.Marshal(payload)
+	req, err := http.NewRequest("POST", baseURL, bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("err", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json;charset=UTF-8")
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != 200 {
+		fmt.Println("err", err)
+	}
+	defer resp.Body.Close()
+
+	content, _ := ioutil.ReadAll(resp.Body)
+	return gjson.Parse(string(content))
 }

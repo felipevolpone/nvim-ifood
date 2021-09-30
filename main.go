@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/neovim/go-client/nvim"
@@ -19,6 +20,7 @@ var refreshToken string
 var selectedAddress Address
 var addresses []Address
 var home gjson.Result
+var merchants gjson.Result
 var selectedCardHomeID string
 
 func main() {
@@ -38,11 +40,6 @@ func main() {
 				pickAddress(p)
 				return "", nil
 			})
-		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodPickHomeCard"},
-			func() (string, error) {
-				pickHomeCard(p)
-				return "", nil
-			})
 		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodLogin"},
 			func() (string, error) {
 				login(p)
@@ -57,9 +54,24 @@ func main() {
 				setMappings(p, mappings)
 				return "", nil
 			})
+		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodPickHomeCard"},
+			func() (string, error) {
+				pickHomeCard(p)
+				return "", nil
+			})
 		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodMerchants"},
 			func() (string, error) {
 				listMerchants(p)
+				mappings := map[string]string{
+					"<cr>": ":call IfoodShowMerchants()<cr>",
+				}
+				setMappings(p, mappings)
+				return "", nil
+			})
+
+		p.HandleFunction(&plugin.FunctionOptions{Name: "IfoodShowMerchants"},
+			func() (string, error) {
+				showMerchants(p)
 				return "", nil
 			})
 		return nil
@@ -198,11 +210,9 @@ func showHome(p *plugin.Plugin) {
 	}
 
 	for _, c := range home.Get("sections.0.cards.0.data.contents").Array() {
-		fmt.Println(c.Raw)
 		repl = append(repl, []byte(c.Get("title").String()))
 	}
 
-	fmt.Println(repl)
 	createWindow(p, "pick a list", repl)
 }
 
@@ -291,12 +301,29 @@ func adressFromString(address string) Address {
 
 func homeCardFromString(selectedCard string) string {
 	for _, c := range home.Get("sections.0.cards.0.data.contents").Array() {
-		fmt.Println(c.Raw)
 		title := c.Get("title").String()
 		if title == selectedCard {
-			fmt.Println(c.Raw)
-			return c.Get("id").String()
+			action := c.Get("action").String()
+			identifier := strings.Split(action, "?")[1]
+			x := strings.Split(identifier, "=")[1]
+			return strings.Split(x, "&")[0]
 		}
 	}
 	return ""
+}
+
+func showMerchants(p *plugin.Plugin) {
+	merchants := ShowMerchants(selectedCardHomeID, selectedAddress.Coordinates.Latitude, selectedAddress.Coordinates.Longitude)
+
+	repl := [][]byte{
+		[]byte("Now it's time to pick a merchant! Go on!"),
+		[]byte("----------------------------------"),
+	}
+
+	for _, c := range merchants.Get("sections.0.cards.0.data.contents").Array() {
+		title := c.Get("name").String()
+		repl = append(repl, []byte(title))
+	}
+
+	createWindow(p, "now you can choose the merchant", repl)
 }
