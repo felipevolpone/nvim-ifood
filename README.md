@@ -1,6 +1,6 @@
 # vim-ifood
 
-[![demo](https://asciinema.org/a/439401.svg)](https://asciinema.org/a/439401.svg?autoplay=1)
+[![demo](https://asciinema.org/a/439401.svg)](https://asciinema.org/a/439401?autoplay=1)
 
 > Você ta programando e de repente bateu aquela fome? Sem problemas, peça seu Ifood sem sair do seu editor de texto favorito 
 
