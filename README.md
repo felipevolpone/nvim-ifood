@@ -1,5 +1,7 @@
 # vim-ifood
 
+[![demo](https://asciinema.org/a/439401.svg)](https://asciinema.org/a/439401.svg?autoplay=1)
+
 > Você ta programando e de repente bateu aquela fome? Sem problemas, peça seu Ifood sem sair do seu editor de texto favorito 
 
 Are you programming and suddenly your stomach is rumbling? No problem, order your Ifood without leaving your favorite text editor 
