@@ -75,13 +75,16 @@ func main() {
 func listAddress(p *plugin.Plugin) {
 	addresses = ListAddress()
 	repl := [][]byte{
-		[]byte("list address"),
+		[]byte("Choose your address:"),
+		[]byte("-------------------------------"),
+		[]byte(""),
 	}
 
 	for _, address := range addresses {
 		a := fmt.Sprintf("%s %s %s %s", address.StreetName, address.StreetNumber, address.Complement, address.Neighborhood)
 		repl = append(repl, []byte(a))
 	}
+
 	createWindow(p, "pick an address", repl)
 }
 
@@ -202,10 +205,12 @@ func showHome(p *plugin.Plugin) {
 }
 
 func login(p *plugin.Plugin) {
-	openCreds()
-	// var result string
-	p.Nvim.Command("IfoodAddress")
-	return
+	/*
+		// for debug purpose
+		openCreds()
+		p.Nvim.Command("IfoodAddress")
+		return
+	*/
 
 	var email string
 	err := p.Nvim.Call("input", &email, "Lets login. Write your email: ")
