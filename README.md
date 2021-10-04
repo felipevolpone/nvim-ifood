@@ -22,13 +22,13 @@ and play with it.
 ### `:IfoodLogin`
 You start here. It'll ask your email and the OTP code sent to your inbox.
 
-### `IfoodAddress`
+### `:IfoodAddress`
 To pick an address again.
 
-### `IfoodHome`
+### `:IfoodHome`
 To show the home cards.
 
-### `IfoodMerchants`
+### `:IfoodMerchants`
 To list the merchants from the card chosen in the home.
 
 ## how?
